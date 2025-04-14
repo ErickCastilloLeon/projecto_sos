@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor para Vicenta</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (íconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid d-flex flex-column min-vh-100">
+        <!-- Header -->
+        <header class="bg-primary text-white text-center py-4">
+            <div class="container">
+                <h1 class="display-4">
+                    <i class="fas fa-language me-2"></i>Traductor Español-Valenciano
+                </h1>
+                <p class="lead">Herramienta de comunicación para el centro asistencial</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h2 class="h5 mb-0"><i class="fas fa-comments me-2"></i>Introduce el texto</h2>
+                            </div>
+                            <div class="card-body">
+                                <form id="traductorForm">
+                                    <div class="mb-3">
+                                        <label for="textoOrigen" class="form-label">Texto en Español:</label>
+                                        <textarea class="form-control" id="textoOrigen" rows="3" placeholder="Ej: ¿Necesitas ayuda?"></textarea>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="traducirTexto()">
+                                        <i class="fas fa-exchange-alt me-2"></i>Traducir
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Resultado -->
+                        <div class="card shadow mt-4">
+                            <div class="card-header bg-success text-white">
+                                <h2 class="h5 mb-0"><i class="fas fa-check-circle me-2"></i>Traducción</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="resultadoTraduccion" class="p-3 bg-light rounded">
+                                    <p class="mb-0 text-muted">La traducción aparecerá aquí...</p>
+                                </div>
+                                <button id="btnVoz" class="btn btn-outline-success mt-3 d-none" onclick="hablar()">
+                                    <i class="fas fa-volume-up me-2"></i>Escuchar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-dark text-white py-3">
+            <div class="container text-center">
+                <p class="mb-0">© 2023 Centro Asistencial - Herramienta desarrollada para Vicenta</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS + Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script personalizado -->
+    <script>
+        function traducirTexto() {
+            const texto = document.getElementById('textoOrigen').value;
+            if (!texto.trim()) {
+                alert("Por favor, introduce un texto");
+                return;
+            }
+
+            fetch('/traducir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `texto=${encodeURIComponent(texto)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultadoDiv = document.getElementById('resultadoTraduccion');
+                resultadoDiv.innerHTML = `<p class="mb-0 fw-bold">${data.traduccion}</p>`;
+                document.getElementById('btnVoz').classList.remove('d-none');
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error al traducir. Inténtalo de nuevo.");
+            });
+        }
+
+        function hablar() {
+            const texto = document.getElementById('resultadoTraduccion').innerText;
+            if ('speechSynthesis' in window) {
+                const voz = new SpeechSynthesisUtterance(texto);
+                voz.lang = 'ca-ES'; // Valenciano
+                window.speechSynthesis.speak(voz);
+            } else {
+                alert("Tu navegador no soporta síntesis de voz");
+            }
+        }
+    </script>
+</body>
+</html>
